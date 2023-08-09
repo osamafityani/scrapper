@@ -8,9 +8,9 @@ from home_depot.models import Product
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
+import asyncio
 
-@api_view(['GET'])
-def scrap_home_depot(request):
+async def scrap():
     sitemap_url = 'https://www.homedepot.com/sitemap/d/plp_sitemap.xml'
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'
@@ -102,4 +102,9 @@ def scrap_home_depot(request):
             else:
                 raise
     print('finish')
+
+
+@api_view(['GET'])
+async def scrap_home_depot(request):
+    asyncio.create_task(scrap())
     return Response("Scraping completed")

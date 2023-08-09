@@ -1,3 +1,2 @@
-# TODO: add timer to call the function one time each day
-
+# TODO: get more data fields
 # TODO: add another websites Alibaba
