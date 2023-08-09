@@ -70,7 +70,6 @@ def scrap_home_depot(request):
 
                 if product_price:
                     product_Info['current_price'] = f'{spans[1].get_text()}.{spans[-1].get_text()}'
-                    print(product_Info['current_price'])
                 else:
                     product_Info['current_price'] = '---'
 
@@ -102,5 +101,5 @@ def scrap_home_depot(request):
                 break
             else:
                 raise
-
+    print('finish')
     return Response("Scraping completed")
