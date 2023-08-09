@@ -24,7 +24,7 @@ def scrap_home_depot(request):
 
     categories = []
     count = 0
-    for url in groups_urls[:5]:
+    for url in groups_urls:
         count += 1
         print(f"Processing stage 1: # {count}/{len(groups_urls)}")
         response = requests.get(url, headers=headers)
@@ -36,7 +36,7 @@ def scrap_home_depot(request):
 
     skips = []
     count = 0
-    for category in categories[:5]:
+    for category in categories:
         count += 1
         print(f"Processing stage 2: # {count}/{len(categories)}")
         print(category)
