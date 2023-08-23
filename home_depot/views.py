@@ -71,7 +71,7 @@ def categories_urls(request):
             groups_urls = [line.strip() for line in file]
 
         count = 0
-        for url in groups_urls[:5]:
+        for url in groups_urls[:20]:
             with open('groups_urls.txt', 'r') as file:
                 lines = file.readlines()[1:]
             with open('groups_urls.txt', 'w') as file:
@@ -116,7 +116,7 @@ def category_data(request):
 
         skips = []
         count = 0
-        for category in categories[:5]:
+        for category in categories[:20]:
             with open('categories.txt', 'r') as file:
                 lines = file.readlines()[1:]
             with open('categories.txt', 'w') as file:
@@ -157,20 +157,10 @@ def category_data(request):
 
                     product, _ = Product.objects.get_or_create(link=product_Info['link'])
                     if _:
-                        product.last_price = product.current_price
-                        if product_Info['current_price'].startswith('$'):
-                            product.current_price = float(product_Info['current_price'][1:])
-                        elif product_Info['current_price'].endswith('¢'):
-                            product.current_price = float(product_Info['current_price'][:-1])
-                        else:
-                            product.current_price = float(product_Info['current_price'])
+                        product.current_price = float(product_Info['current_price'])
                     else:
-                        if product_Info['current_price'].startswith('$'):
-                            product.current_price = float(product_Info['current_price'][1:])
-                        elif product_Info['current_price'].endswith('¢'):
-                            product.current_price = float(product_Info['current_price'][:-1])
-                        else:
-                            product.current_price = float(product_Info['current_price'])
+                        product.last_price = product.current_price
+                        product.current_price = float(product_Info['current_price'])
                     product.save()
 
             except (UnicodeDecodeError, ConnectionError, SSLError):
