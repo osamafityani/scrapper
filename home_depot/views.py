@@ -8,6 +8,8 @@ from requests import ConnectionError
 from home_depot.models import Product
 from rest_framework.decorators import api_view
 
+# domain = 'http://127.0.0.1:8000'
+domain = 'https://scraper-ly28d.ondigitalocean.app'
 
 @api_view(['GET'])
 def scrap_home_depot(request):
@@ -17,7 +19,7 @@ def scrap_home_depot(request):
         with open('groups_urls.txt', 'w') as file:
             file.truncate(0)
 
-        url = 'https://scraper-ly28d.ondigitalocean.app/groups_urls/'
+        url = f'{domain}/groups_urls/'
 
         response = requests.get(url, timeout=15)
 
@@ -49,7 +51,7 @@ def groups_urls(request):
             for loc in sitemap_soup.find_all('loc'):
                 file.write(loc.text + '\n')
 
-        url = 'https://scraper-ly28d.ondigitalocean.app/categories_urls/'
+        url = f'{domain}/categories_urls/'
         requests.get(url, timeout=15)
 
     response = HttpResponse()
@@ -82,17 +84,17 @@ def categories_urls(request):
             soup = BeautifulSoup(data, 'xml')
             links = soup.find_all('loc')
 
-            with open('categories.txt', 'w') as file:
+            with open('categories.txt', 'a') as file:
                 for link in links:
                     file.write(link.text + '\n')
 
         with open('groups_urls.txt', 'r') as file:
             first_char = file.read(1)
             if not first_char:
-                url = 'https://scraper-ly28d.ondigitalocean.app/category_data/'
+                url = f'{domain}/category_data/'
                 requests.get(url, timeout=15)
             else:
-                url = 'https://scraper-ly28d.ondigitalocean.app/categories_urls/'
+                url = f'{domain}/categories_urls/'
                 requests.get(url, timeout=15)
 
 
@@ -161,14 +163,14 @@ def category_data(request):
                         elif product_Info['current_price'].endswith('¢'):
                             product.current_price = float(product_Info['current_price'][:-1])
                         else:
-                            print(product_Info['current_price'])
+                            product.current_price = float(product_Info['current_price'])
                     else:
                         if product_Info['current_price'].startswith('$'):
                             product.current_price = float(product_Info['current_price'][1:])
                         elif product_Info['current_price'].endswith('¢'):
                             product.current_price = float(product_Info['current_price'][:-1])
                         else:
-                            print(product_Info['current_price'])
+                            product.current_price = float(product_Info['current_price'])
                     product.save()
 
             except (UnicodeDecodeError, ConnectionError, SSLError):
@@ -187,7 +189,7 @@ def category_data(request):
             if not first_char:
                 print('finish')
             else:
-                url = 'https://scraper-ly28d.ondigitalocean.app/category_data/'
+                url = f'{domain}/category_data/'
                 requests.get(url, timeout=15)
 
     response = HttpResponse()
