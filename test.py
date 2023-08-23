@@ -1,7 +1,7 @@
 import requests
 
 # URL you want to send the GET request to
-url = 'http://127.0.0.1:8000/scrap_home_depot/'
+url = 'http://127.0.0.1:8000/categories_urls/'
 
 # Sending the GET request
 response = requests.get(url, timeout=15)

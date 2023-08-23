@@ -12,6 +12,28 @@ from rest_framework.decorators import api_view
 @api_view(['GET'])
 def scrap_home_depot(request):
     def do_after():
+        with open('categories.txt', 'w') as file:
+            file.truncate(0)
+        with open('groups_urls.txt', 'w') as file:
+            file.truncate(0)
+
+        url = 'https://scraper-ly28d.ondigitalocean.app/groups_urls/'
+
+        response = requests.get(url, timeout=15)
+
+        if response.status_code == 200:
+            print("Request successful")
+        else:
+            print(f"Request failed with status code: {response.status_code}")
+
+    response = HttpResponse()
+    response._resource_closers.append(do_after)
+    return response
+
+
+@api_view(['GET'])
+def groups_urls(request):
+    def do_after():
         sitemap_url = 'https://www.homedepot.com/sitemap/d/plp_sitemap.xml'
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'
@@ -21,30 +43,87 @@ def scrap_home_depot(request):
         sitemap_data = response.text
         sitemap_soup = BeautifulSoup(sitemap_data, 'xml')
 
-        groups_urls = [loc.text for loc in sitemap_soup.find_all('loc')]
+        # groups_urls = [loc.text for loc in sitemap_soup.find_all('loc')]
 
-        categories = []
+        with open('groups_urls.txt', 'w') as file:
+            for loc in sitemap_soup.find_all('loc'):
+                file.write(loc.text + '\n')
+
+        url = 'https://scraper-ly28d.ondigitalocean.app/categories_urls/'
+        requests.get(url, timeout=15)
+
+    response = HttpResponse()
+    response._resource_closers.append(do_after)
+    return response
+
+
+@api_view(['GET'])
+def categories_urls(request):
+
+    def do_after():
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'
+        }
+
+        with open('groups_urls.txt', 'r') as file:
+            groups_urls = [line.strip() for line in file]
+
         count = 0
-        for url in groups_urls:
+        for url in groups_urls[:5]:
+            with open('groups_urls.txt', 'r') as file:
+                lines = file.readlines()[1:]
+            with open('groups_urls.txt', 'w') as file:
+                file.writelines(lines)
+
             count += 1
             print(f"Processing stage 1: # {count}/{len(groups_urls)}")
             response = requests.get(url, headers=headers)
             data = response.text
             soup = BeautifulSoup(data, 'xml')
             links = soup.find_all('loc')
-            categories += [link.text for link in links]
+
+            with open('categories.txt', 'w') as file:
+                for link in links:
+                    file.write(link.text + '\n')
+
+        with open('groups_urls.txt', 'r') as file:
+            first_char = file.read(1)
+            if not first_char:
+                url = 'https://scraper-ly28d.ondigitalocean.app/category_data/'
+                requests.get(url, timeout=15)
+            else:
+                url = 'https://scraper-ly28d.ondigitalocean.app/categories_urls/'
+                requests.get(url, timeout=15)
+
+
+    response = HttpResponse()
+    response._resource_closers.append(do_after)
+    return response
+
+
+@api_view(['GET'])
+def category_data(request):
+    def do_after():
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'
+        }
+
+        with open('categories.txt', 'r') as file:
+            categories = [line.strip() for line in file]
         categories = list(set(categories))
 
         skips = []
         count = 0
-        for category in categories:
+        for category in categories[:5]:
+            with open('categories.txt', 'r') as file:
+                lines = file.readlines()[1:]
+            with open('categories.txt', 'w') as file:
+                file.writelines(lines)
+
             count += 1
             print(f"Processing stage 2: # {count}/{len(categories)}")
-            print(category)
             try:
-                if isinstance(category, Tag):
-                    category = f"https://www.homedepot.com{category['href']}"
-                elif not category.startswith('http'):
+                if not category.startswith('http'):
                     category = f"https://www.homedepot.com{category}"
 
                 response = requests.get(category, headers=headers)
@@ -102,7 +181,14 @@ def scrap_home_depot(request):
                     break
                 else:
                     raise
-        print('finish')
+
+        with open('categories.txt', 'r') as file:
+            first_char = file.read(1)
+            if not first_char:
+                print('finish')
+            else:
+                url = 'https://scraper-ly28d.ondigitalocean.app/category_data/'
+                requests.get(url, timeout=15)
 
     response = HttpResponse()
     response._resource_closers.append(do_after)
