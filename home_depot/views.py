@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 import requests
 from ssl import SSLError
 from bs4 import BeautifulSoup
@@ -8,8 +10,9 @@ from requests import ConnectionError
 from home_depot.models import Product
 from rest_framework.decorators import api_view
 
-# domain = 'http://127.0.0.1:8000'
-domain = 'https://scraper-ly28d.ondigitalocean.app'
+domain = 'http://127.0.0.1:8000'
+# domain = 'https://scraper-ly28d.ondigitalocean.app'
+
 
 @api_view(['GET'])
 def scrap_home_depot(request):
@@ -19,7 +22,7 @@ def scrap_home_depot(request):
         with open('groups_urls.txt', 'w') as file:
             file.truncate(0)
 
-        url = f'{domain}/groups_urls/'
+        url = f'{domain}/home_depot/groups_urls/'
 
         response = requests.get(url, timeout=15)
 
@@ -51,7 +54,7 @@ def groups_urls(request):
             for loc in sitemap_soup.find_all('loc'):
                 file.write(loc.text + '\n')
 
-        url = f'{domain}/categories_urls/'
+        url = f'{domain}/home_depot/categories_urls/'
         requests.get(url, timeout=15)
 
     response = HttpResponse()
@@ -91,10 +94,10 @@ def categories_urls(request):
         with open('groups_urls.txt', 'r') as file:
             first_char = file.read(1)
             if not first_char:
-                url = f'{domain}/category_data/'
+                url = f'{domain}/home_depot/category_data/'
                 requests.get(url, timeout=15)
             else:
-                url = f'{domain}/categories_urls/'
+                url = f'{domain}/home_depot/categories_urls/'
                 requests.get(url, timeout=15)
 
 
@@ -151,18 +154,25 @@ def category_data(request):
                     spans = price_div.find_all('span')
 
                     if product_price:
-                        product_Info['current_price'] = f'{spans[1].get_text()}.{spans[-1].get_text()}'
+                        if spans[1].get_text() == '¢':
+                            product_Info['current_price'] = f'0.{spans[0].get_text()}'
+                        else:
+                            product_Info['current_price'] = f'{spans[1].get_text()}.{spans[-1].get_text()}'
                     else:
                         product_Info['current_price'] = '---'
 
                     product, _ = Product.objects.get_or_create(link=product_Info['link'])
-                    if _:
-                        product.current_price = float(product_Info['current_price'])
-                    else:
-                        product.last_price = product.current_price
-                        product.current_price = float(product_Info['current_price'])
-                    product.save()
-
+                    try:
+                        if _:
+                            product.current_price = Decimal(product_Info['current_price'])
+                        else:
+                            product.last_price = product.current_price
+                            product.current_price = Decimal(product_Info['current_price'])
+                        product.save()
+                    except Exception as e:
+                        print(e)
+                        print(category)
+                        print(product_Info)
             except (UnicodeDecodeError, ConnectionError, SSLError):
                 skips.append(category)
                 print(f"Error processing URL: {category}")
@@ -179,7 +189,7 @@ def category_data(request):
             if not first_char:
                 print('finish')
             else:
-                url = f'{domain}/category_data/'
+                url = f'{domain}/home_depot/category_data/'
                 requests.get(url, timeout=15)
 
     response = HttpResponse()

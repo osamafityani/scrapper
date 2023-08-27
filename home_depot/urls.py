@@ -3,7 +3,7 @@ from home_depot.views import scrap_home_depot, groups_urls, categories_urls, cat
 
 urlpatterns = [
      path('scrap_home_depot/', scrap_home_depot),
-     path('groups_urls/', groups_urls),
-     path('categories_urls/', categories_urls),
-     path('category_data/', category_data),
+     path('home_depot/groups_urls/', groups_urls),
+     path('home_depot/categories_urls/', categories_urls),
+     path('home_depot/category_data/', category_data),
 ]

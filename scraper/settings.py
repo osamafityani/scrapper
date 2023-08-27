@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'corsheaders',
 
     'home_depot.apps.HomeDepotConfig',
+    'ulta.apps.UltaConfig',
 ]
 
 MIDDLEWARE = [
