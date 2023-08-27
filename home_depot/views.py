@@ -47,7 +47,6 @@ def groups_urls(request):
         response = requests.get(sitemap_url, headers=headers)
         sitemap_data = response.text
         sitemap_soup = BeautifulSoup(sitemap_data, 'xml')
-
         # groups_urls = [loc.text for loc in sitemap_soup.find_all('loc')]
 
         with open('groups_urls.txt', 'w') as file:
