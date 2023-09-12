@@ -1,3 +1,4 @@
+import time
 from decimal import Decimal
 
 import requests
@@ -14,13 +15,27 @@ domain = 'http://127.0.0.1:8000'
 # domain = 'https://scraper-ly28d.ondigitalocean.app'
 
 
+def get_from_home_depot(url):
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'
+    }
+
+    url = 'https://www.homedepot.com/sitemap/d/plp_sitemap.xml'
+    response = requests.get(url, headers=headers)
+    sitemap_data = response.text
+    rerequest = True
+    while rerequest:
+        sitemap_soup = BeautifulSoup(sitemap_data, 'xml')
+        rerequest = sitemap_soup.find('div', class_='error__container') != None
+    return sitemap_data
+
 @api_view(['GET'])
 def scrap_home_depot(request):
     def do_after():
         with open('categories.txt', 'w') as file:
             file.truncate(0)
-        with open('groups_urls.txt', 'w') as file:
-            file.truncate(0)
+        # with open('groups_urls.txt', 'w') as file:
+        #     file.truncate(0)
 
         url = f'{domain}/home_depot/groups_urls/'
 
@@ -48,13 +63,13 @@ def groups_urls(request):
         sitemap_data = response.text
         sitemap_soup = BeautifulSoup(sitemap_data, 'xml')
         # groups_urls = [loc.text for loc in sitemap_soup.find_all('loc')]
-
-        with open('groups_urls.txt', 'w') as file:
-            for loc in sitemap_soup.find_all('loc'):
-                file.write(loc.text + '\n')
-
-        url = f'{domain}/home_depot/categories_urls/'
-        requests.get(url, timeout=15)
+        print(sitemap_data)
+        # with open('groups_urls.txt', 'w') as file:
+        for loc in sitemap_soup.find_all('loc'):
+            page_url = loc.text
+            url = f'{domain}/home_depot/categories_urls/'
+            requests.post(url, data={'page_url': page_url}, timeout=15)
+            time.sleep(0.1)
 
     response = HttpResponse()
     response._resource_closers.append(do_after)
@@ -63,45 +78,34 @@ def groups_urls(request):
 
 @api_view(['GET'])
 def categories_urls(request):
+    request_data = request.data
 
-    def do_after():
+    def do_after(data):
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'
         }
 
-        with open('groups_urls.txt', 'r') as file:
-            groups_urls = [line.strip() for line in file]
+        response = requests.get(data, headers=headers)
+        data = response.text
+        soup = BeautifulSoup(data, 'xml')
+        links = soup.find_all('loc')
 
-        count = 0
-        for url in groups_urls[:20]:
-            with open('groups_urls.txt', 'r') as file:
-                lines = file.readlines()[1:]
-            with open('groups_urls.txt', 'w') as file:
-                file.writelines(lines)
+        with open('categories.txt', 'a') as file:
+            for link in links:
+                file.write(link.text + '\n')
 
-            count += 1
-            print(f"Processing stage 1: # {count}/{len(groups_urls)}")
-            response = requests.get(url, headers=headers)
-            data = response.text
-            soup = BeautifulSoup(data, 'xml')
-            links = soup.find_all('loc')
-
-            with open('categories.txt', 'a') as file:
-                for link in links:
-                    file.write(link.text + '\n')
-
-        with open('groups_urls.txt', 'r') as file:
-            first_char = file.read(1)
-            if not first_char:
-                url = f'{domain}/home_depot/category_data/'
-                requests.get(url, timeout=15)
-            else:
-                url = f'{domain}/home_depot/categories_urls/'
-                requests.get(url, timeout=15)
+        # with open('groups_urls.txt', 'r') as file:
+        #     first_char = file.read(1)
+        #     if not first_char:
+        #         url = f'{domain}/home_depot/category_data/'
+        #         requests.get(url, timeout=15)
+        #     else:
+        #         url = f'{domain}/home_depot/categories_urls/'
+        #         requests.get(url, timeout=15)
 
 
     response = HttpResponse()
-    response._resource_closers.append(do_after)
+    response._resource_closers.append(lambda: do_after(request_data['page_url']))
     return response
 
 
