@@ -216,7 +216,7 @@ def make_request(url):
                 if not loc.text.startswith('https://media'):
                     file.write(loc.text + '\n')
             file.close()
-        
+        print("&&&&&&&&&&&&&&&&&&&&&&&&")
         session.close()
         return f"Response from {url}: {response.status_code}\n"
     except Exception as e:
@@ -282,7 +282,7 @@ def read_urls_chunk(file, chunk_size=1000):
 
 
 def threaded_requests(request):
-    with open('items.txt', 'w') as file:
+    with open('threaded_items.txt', 'w') as file:
         file.truncate(0)
 
     start_time = time.time()
