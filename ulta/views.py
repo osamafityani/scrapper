@@ -243,6 +243,7 @@ def create_products(url):
 
         try:
             product, created = Product.objects.get_or_create(link=url)
+            print('----------------------')
         except:
             print('+++++++++++++++++++++++++++++++++')
 
@@ -255,9 +256,10 @@ def create_products(url):
 
         try:
             product.save()
+            print('----------------------')
         except:
             print('**********************************')
-        print('----------------------')
+        
         session.close()
         return f"Response from {url}: {response.status_code}\n"
     except Exception as e:
@@ -279,8 +281,9 @@ def read_urls_chunk(file, chunk_size=10):
         link = file.readline().strip()
         urls.append(link)
     
-    print(len(lines))
+    
     lines = file.readlines()
+    print(len(lines))
     with open('items.txt', 'w') as file:
         for line in lines:
             file.write(line)
