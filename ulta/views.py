@@ -273,46 +273,28 @@ def read_sitemap_urls(sitemap_url):
     return [loc.text for loc in soup.find_all('loc')]
 
 
-def read_urls_chunk(file, chunk_size=100):
+def read_urls_chunk(file, chunk_size=10):
     urls = []
     for _ in range(chunk_size):
-        line = file.readline()
-        if not line:
-            break
-        urls.append(line.strip())
+        link = file.readline().strip()
+        urls.append(link)
+    
+    print(len(lines))
+    lines = file.readlines()
+    with open('items.txt', 'w') as file:
+        for line in lines:
+            file.write(line)
+        
     return urls
 
 
 def threaded_requests(request):
-    with open('threaded_items.txt', 'w') as file:
-        file.truncate(0)
 
-    start_time = time.time()
-    sitemap_url = 'https://www.ulta.com/sitemap/p.xml'
-  
-    # Read URLs from the sitemap
-    urls = read_sitemap_urls(sitemap_url)
-
-    
-    with ThreadPoolExecutor(max_workers=None) as executor: # optimally defined number of threads
-        res = [executor.submit(make_request, url) for url in urls]
-        concurrent.futures.wait(res)
-
-    with open('threaded_items.txt', 'r') as file:
+    with open('items.txt', 'r') as file:
         print('!!!!!!!!!!!!!!!!!!!!!!!!!')
-        while True:
-            urls_chunk = read_urls_chunk(file)
-            if not urls_chunk:
-                break
+        urls_chunk = read_urls_chunk(file)
+        with ThreadPoolExecutor(max_workers=None) as executor:
+            res = [executor.submit(create_products, url) for url in urls_chunk]
+            concurrent.futures.wait(res)
 
-            with ThreadPoolExecutor(max_workers=None) as executor:
-                res = [executor.submit(create_products, url) for url in urls_chunk]
-                concurrent.futures.wait(res)
-
-    # results = [future.result() for future in res]
-
-
-    end_time = time.time()
-    elapsed_time = end_time - start_time
-    # results.insert(0,elapsed_time)
-    return HttpResponse(elapsed_time)
+    return HttpResponse()
