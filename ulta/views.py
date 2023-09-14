@@ -7,8 +7,8 @@ from django.http import HttpResponse
 from home_depot.models import Product
 from rest_framework.decorators import api_view
 
-# domain = 'http://127.0.0.1:8000'
-domain = 'https://scraper-27hwb.ondigitalocean.app'
+domain = 'http://127.0.0.1:8000'
+# domain = 'https://scraper-27hwb.ondigitalocean.app'
 
 
 @api_view(['GET'])
@@ -97,7 +97,10 @@ def scrap_ulta(request):
             file.truncate(0)
 
         url = f'{domain}/scrap_ulta/categories_urls/'
-        response = requests.get(url, timeout=15)
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'
+        }
+        response = requests.get(url, timeout=15, headers=headers)
 
         if response.status_code == 200:
             print("Request successful")
@@ -120,10 +123,12 @@ def categories_urls(request):
         response = requests.get(sitemap_url, headers=headers)
         sitemap_data = response.text
         sitemap_soup = BeautifulSoup(sitemap_data, 'xml')
-        for loc in sitemap_soup.find_all('loc'):
+        print(f"cat num: {len(sitemap_soup.find_all('loc'))}")
+        for index, loc in enumerate(sitemap_soup.find_all('loc')):
+            print(f'cat# {index}')
             url = f'{domain}/scrap_ulta/items_pages/'
             requests.post(url, data={'page_url': loc.text}, timeout=15)
-
+            print(f'finish cat.#{index}')
     response = HttpResponse()
     response._resource_closers.append(do_after)
     return response
@@ -142,11 +147,14 @@ def items_pages(request):
 
         data = response.text
         soup = BeautifulSoup(data, 'xml')
-        for loc in soup.find_all('loc'):
+        print(f"items num: {len(soup.find_all('loc'))}")
+        for index, loc in enumerate(soup.find_all('loc')):
             if not loc.text.startswith('https://media'):
+                print(f'item #{index}')
                 url = f'{domain}/scrap_ulta/item_data/'
                 requests.post(url, data={'page_url': loc.text}, timeout=15)
                 time.sleep(0.5)
+                print(f'finish item #{index}')
 
     response = HttpResponse()
     response._resource_closers.append(lambda: do_after(request_data['page_url']))
