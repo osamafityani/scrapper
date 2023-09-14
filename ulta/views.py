@@ -90,17 +90,14 @@ def scrap_ulta_v1(request):
     response._resource_closers.append(do_after)
     return response
 
+
 @api_view(['GET'])
 def scrap_ulta(request):
+    with open('items.txt', 'r') as file:
+        for line in file:
+            return Response(True)
 
-
-    # url = f'{domain}/scrap_ulta/categories_urls/'
-    # headers = {
-    #     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'
-    # }
-    # response = requests.get(url, headers=headers)
-
-    return Response()
+    return Response(False)
 
 
 @api_view(['GET'])
