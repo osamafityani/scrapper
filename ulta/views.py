@@ -4,6 +4,8 @@ from decimal import Decimal
 import requests
 from bs4 import BeautifulSoup
 from django.http import HttpResponse
+from rest_framework.response import Response
+
 from home_depot.models import Product
 from rest_framework.decorators import api_view
 
@@ -90,119 +92,111 @@ def scrap_ulta_v1(request):
 
 @api_view(['GET'])
 def scrap_ulta(request):
-    def do_after():
-        with open('categories.txt', 'w') as file:
-            file.truncate(0)
-        with open('groups_urls.txt', 'w') as file:
-            file.truncate(0)
 
-        url = f'{domain}/scrap_ulta/categories_urls/'
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'
-        }
-        response = requests.get(url, headers=headers)
 
-        if response.status_code == 200:
-            print("Request successful")
-        else:
-            print(f"Request failed with status code: {response.status_code}")
+    # url = f'{domain}/scrap_ulta/categories_urls/'
+    # headers = {
+    #     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'
+    # }
+    # response = requests.get(url, headers=headers)
 
-    response = HttpResponse()
-    response._resource_closers.append(do_after)
-    return response
+    return Response()
 
 
 @api_view(['GET'])
 def categories_urls(request):
-    def do_after():
-        sitemap_url = 'https://www.ulta.com/sitemap/p.xml'
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'
-        }
+    with open('groups_urls.txt', 'w') as file:
+        file.truncate(0)
 
-        response = requests.get(sitemap_url, headers=headers)
-        sitemap_data = response.text
-        sitemap_soup = BeautifulSoup(sitemap_data, 'xml')
-        print(f"cat num: {len(sitemap_soup.find_all('loc'))}")
-        for index, loc in enumerate(sitemap_soup.find_all('loc')):
-            print(f'cat# {index}')
-            url = f'{domain}/scrap_ulta/items_pages/'
-            requests.post(url, data={'page_url': loc.text})
-            print(f'finish cat.#{index}')
-    response = HttpResponse()
-    response._resource_closers.append(do_after)
-    return response
+    sitemap_url = 'https://www.ulta.com/sitemap/p.xml'
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'
+    }
+
+    response = requests.get(sitemap_url, headers=headers)
+    sitemap_data = response.text
+    sitemap_soup = BeautifulSoup(sitemap_data, 'xml')
+
+    with open('groups_urls.txt', 'a') as file:
+        for loc in sitemap_soup.find_all('loc'):
+            file.write(loc.text + '\n')
+    file.close()
+
+    # url = f'{domain}/scrap_ulta/items_pages/'
+    # requests.post(url, data={'page_url': loc.text})
+
+    return Response()
 
 
-@api_view(['POST'])
+@api_view(['GET'])
 def items_pages(request):
-    request_data = request.data
-    def do_after(data):
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'
-        }
+    with open('items.txt', 'w') as file:
+        file.truncate(0)
 
-        response = requests.get(data, headers=headers)
-        response.raise_for_status()
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'
+    }
 
-        data = response.text
-        soup = BeautifulSoup(data, 'xml')
-        print(f"items num: {len(soup.find_all('loc'))}")
-        for index, loc in enumerate(soup.find_all('loc')):
-            if not loc.text.startswith('https://media'):
-                print(f'item #{index}')
-                url = f'{domain}/scrap_ulta/item_data/'
-                requests.post(url, data={'page_url': loc.text})
-                time.sleep(0.5)
-                print(f'finish item #{index}')
+    with open('groups_urls.txt', 'r') as file:
+        for line in file:
+            response = requests.get(line.strip(), headers=headers)
+            response.raise_for_status()
 
-    response = HttpResponse()
-    response._resource_closers.append(lambda: do_after(request_data['page_url']))
-    return response
+            data = response.text
+            soup = BeautifulSoup(data, 'xml')
+
+            with open('items.txt', 'a') as file:
+                for loc in soup.find_all('loc'):
+                    if not loc.text.startswith('https://media'):
+                        file.write(loc.text + '\n')
+            file.close()
+
+    return Response()
 
 
-@api_view(['POST'])
+@api_view(['GET'])
 def item_data(request):
-    request_data = request.data
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'
+    }
 
-    def do_after(data):
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'
-        }
+    with open('items.txt', 'r') as file:
+        data = file.readline()
+        lines = file.readlines()[1:]
 
-        response = requests.get(data, headers=headers)
-        response.raise_for_status()
-        link = data
+    with open('items.txt', 'w') as file:
+        for line in lines:
+            file.write(line)
 
-        data = response.text
-        soup = BeautifulSoup(data, 'html.parser')
+    response = requests.get(data, headers=headers)
+    response.raise_for_status()
+    link = data
 
-        price = soup.find('span', class_='Text-ds Text-ds--title-6 Text-ds--left Text-ds--black').text
+    data = response.text
+    soup = BeautifulSoup(data, 'html.parser')
 
-        if price.count('$') == 1:
-            price = Decimal(price[1:])
-        else:
-            price = 0
+    price = soup.find('span', class_='Text-ds Text-ds--title-6 Text-ds--left Text-ds--black').text
 
-        try:
-            product, created = Product.objects.get_or_create(link=link)
-        except:
-            print('+++++++++++++++++++++++++++++++++')
+    if price.count('$') == 1:
+        price = Decimal(price[1:])
+    else:
+        price = 0
 
-        if created:
-            product.current_price = price
+    try:
+        product, created = Product.objects.get_or_create(link=link)
+    except:
+        print('+++++++++++++++++++++++++++++++++')
 
-        else:
-            product.last_price = product.current_price
-            product.current_price = price
+    if created:
+        product.current_price = price
 
-        try:
-            product.save()
-        except:
-            print('************************************')
-        print('done')
-    response = HttpResponse()
-    print('response')
-    response._resource_closers.append(lambda: do_after(request_data['page_url']))
-    print('closed')
-    return response
+    else:
+        product.last_price = product.current_price
+        product.current_price = price
+
+    try:
+        product.save()
+    except:
+        print('************************************')
+
+    return Response()
