@@ -127,7 +127,7 @@ def categories_urls(request):
         for index, loc in enumerate(sitemap_soup.find_all('loc')):
             print(f'cat# {index}')
             url = f'{domain}/scrap_ulta/items_pages/'
-            requests.post(url, data={'page_url': loc.text}, timeout=15)
+            requests.post(url, data={'page_url': loc.text})
             print(f'finish cat.#{index}')
     response = HttpResponse()
     response._resource_closers.append(do_after)
