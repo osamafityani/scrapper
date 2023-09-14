@@ -7,8 +7,8 @@ from django.http import HttpResponse
 from home_depot.models import Product
 from rest_framework.decorators import api_view
 
-domain = 'http://127.0.0.1:8000'
-# domain = 'https://scraper-27hwb.ondigitalocean.app'
+# domain = 'http://127.0.0.1:8000'
+domain = 'https://scraper-27hwb.ondigitalocean.app'
 
 
 @api_view(['GET'])
