@@ -187,10 +187,8 @@ def item_data(request):
         try:
             product, created = Product.objects.get_or_create(link=link)
         except:
-            try:
-                product, created = Product.objects.get_or_create(link=link)
-            except:
-                print('+++++++++++++++++++++++++++++++++')
+            print('+++++++++++++++++++++++++++++++++')
+
         if created:
             product.current_price = price
 
@@ -201,11 +199,10 @@ def item_data(request):
         try:
             product.save()
         except:
-            try:
-                product.save()
-            except:
-                print('************************************')
-
+            print('************************************')
+        print('done')
     response = HttpResponse()
+    print('response')
     response._resource_closers.append(lambda: do_after(request_data['page_url']))
+    print('closed')
     return response
