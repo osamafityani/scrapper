@@ -161,16 +161,15 @@ def item_data(request):
     }
 
     with open('items.txt', 'r') as file:
-        data = file.readline()
-        lines = file.readlines()[1:]
+        link = file.readline().strip()
+        lines = file.readlines()
+        print(len(lines))
 
     with open('items.txt', 'w') as file:
         for line in lines:
             file.write(line)
 
-    response = requests.get(data, headers=headers)
-    response.raise_for_status()
-    link = data
+    response = requests.get(link, headers=headers)
 
     data = response.text
     soup = BeautifulSoup(data, 'html.parser')
