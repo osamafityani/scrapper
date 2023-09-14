@@ -100,7 +100,7 @@ def scrap_ulta(request):
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'
         }
-        response = requests.get(url, timeout=15, headers=headers)
+        response = requests.get(url, headers=headers)
 
         if response.status_code == 200:
             print("Request successful")
@@ -152,7 +152,7 @@ def items_pages(request):
             if not loc.text.startswith('https://media'):
                 print(f'item #{index}')
                 url = f'{domain}/scrap_ulta/item_data/'
-                requests.post(url, data={'page_url': loc.text}, timeout=15)
+                requests.post(url, data={'page_url': loc.text})
                 time.sleep(0.5)
                 print(f'finish item #{index}')
 
