@@ -211,7 +211,7 @@ def make_request(url):
         response = session.get(url,headers=headers)
         data = response.text
         soup = BeautifulSoup(data, 'xml')
-        with open('items.txt', 'a') as file:
+        with open('threaded_items.txt', 'a') as file:
             for loc in soup.find_all('loc'):
                 if not loc.text.startswith('https://media'):
                     file.write(loc.text + '\n')
@@ -228,6 +228,7 @@ def create_products(url):
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'
         }
     try:
+        print('**********************')
         session = requests.Session()
         response = session.get(url,headers=headers)
         data = response.text
@@ -256,6 +257,7 @@ def create_products(url):
             product.save()
         except:
             print('**********************************')
+        print('+++++++++++++++++++++++++++++++++')
         session.close()
         return f"Response from {url}: {response.status_code}\n"
     except Exception as e:
@@ -296,7 +298,8 @@ def threaded_requests(request):
         res = [executor.submit(make_request, url) for url in urls]
         concurrent.futures.wait(res)
 
-    with open('items.txt', 'r') as file:
+    with open('threaded_items.txt', 'r') as file:
+        print('!!!!!!!!!!!!!!!!!!!!!!!!!')
         while True:
             urls_chunk = read_urls_chunk(file)
             if not urls_chunk:
