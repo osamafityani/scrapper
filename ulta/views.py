@@ -273,7 +273,7 @@ def read_sitemap_urls(sitemap_url):
     return [loc.text for loc in soup.find_all('loc')]
 
 
-def read_urls_chunk(file, chunk_size=1000):
+def read_urls_chunk(file, chunk_size=100):
     urls = []
     for _ in range(chunk_size):
         line = file.readline()
