@@ -281,7 +281,6 @@ def read_urls_chunk(file, chunk_size=10):
         link = file.readline().strip()
         urls.append(link)
     
-    
     lines = file.readlines()
     print(len(lines))
     with open('items.txt', 'w') as file:
