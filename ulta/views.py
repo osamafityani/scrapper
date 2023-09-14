@@ -257,7 +257,7 @@ def create_products(url):
             product.save()
         except:
             print('**********************************')
-        print('+++++++++++++++++++++++++++++++++')
+        print('----------------------')
         session.close()
         return f"Response from {url}: {response.status_code}\n"
     except Exception as e:
