@@ -17,7 +17,7 @@ def update_product(sender, instance, created, **kwargs):
                 subject,
                 message,
                 settings.EMAIL_HOST_USER,
-                ['malek315@gmail.com'],
+                ['malek315@gmail.com', 'osamafityani@betashark.com'],
                 fail_silently=False,
             )
 
