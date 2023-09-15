@@ -89,8 +89,12 @@ DEVELOPMENT_MODE = os.getenv("DEVELOPMENT_MODE", "False") == "True"
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'defaultdb',
+        'USER': 'doadmin',
+        'PASSWORD': 'AVNS_MqXtwOmVA18DfCnMdaM',
+        'HOST': 'db-postgresql-fra1-81596-do-user-14647223-0.b.db.ondigitalocean.com',
+        'PORT': '25060',
     }
 }
 
