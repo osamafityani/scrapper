@@ -87,12 +87,24 @@ WSGI_APPLICATION = 'scraper.wsgi.application'
 
 DEVELOPMENT_MODE = os.getenv("DEVELOPMENT_MODE", "False") == "True"
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'defaultdb',
+        'USER': 'doadmin',
+        'PASSWORD': 'AVNS_1bCB2XH0PvAoVNRWChx',
+        'HOST': 'db-postgresql-fra1-56936-do-user-14647223-0.b.db.ondigitalocean.com',
+        'PORT': '25060',
     }
 }
+
 
 
 # Password validation
