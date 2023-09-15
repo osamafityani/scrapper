@@ -102,8 +102,7 @@ def scrap_ulta(request):
     return Response(False)
 
 
-@api_view(['GET'])
-def categories_urls(request):
+def categories_urls():
     with open('groups_urls.txt', 'w') as file:
         file.truncate(0)
 
@@ -124,11 +123,11 @@ def categories_urls(request):
     # url = f'{domain}/scrap_ulta/items_pages/'
     # requests.post(url, data={'page_url': loc.text})
 
-    return Response()
+    return
 
 
-@api_view(['GET'])
-def items_pages(request):
+
+def items_pages():
     with open('items.txt', 'w') as file:
         file.truncate(0)
 
@@ -150,7 +149,7 @@ def items_pages(request):
                         file.write(loc.text + '\n')
             file.close()
 
-    return Response()
+    return
 
 
 @api_view(['GET'])
@@ -167,6 +166,11 @@ def item_data(request):
     with open('items.txt', 'w') as file:
         for line in lines:
             file.write(line)
+
+    if len(lines) == 0:
+        categories_urls()
+        items_pages()
+
 
     response = requests.get(link, headers=headers)
 
