@@ -259,7 +259,7 @@ def create_products(url):
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'
         }
     try:
-        print("----------------------")
+        print("---------------------- requesting item info")
         response = requests.get(url,headers=headers)
 
         data = response.text
@@ -309,12 +309,17 @@ def thread_items(request):
             urls.append(file.readline().strip())
         lines = file.readlines()
         print(len(lines))
+        if len(lines) == 0:
+            check = True
+        else: check=False
     file.close()
-
-    if len(lines) == 0:
+    print('********* - before checking if items empty')
+    if check:
+        print('+++++++++++++ - getting items')
         categories_urls()
         items_pages()
     else:
+        print('&&&&&&&& - writing lines')
         with open('items.txt', 'w') as file:
             for line in lines:
                 file.write(line)
@@ -323,7 +328,7 @@ def thread_items(request):
     with ThreadPoolExecutor(max_workers=10) as executor:
         res = [executor.submit(create_products, url) for url in urls]
         concurrent.futures.wait(res)
-
+    print('@@@@@@@@@@ - Item Done')
     return Response()
 
 def read_sitemap_urls(sitemap_url):
