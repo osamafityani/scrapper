@@ -259,6 +259,7 @@ def create_products(url):
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'
         }
     try:
+        print("----------------------")
         response = requests.get(url,headers=headers)
 
         data = response.text
@@ -303,7 +304,7 @@ def thread_items(request):
         if len(lines) < 10:
             r = len(lines)
         else: r = 10
-        
+
         for i in range(r):
             urls.append(file.readline().strip())
         lines = file.readlines()
