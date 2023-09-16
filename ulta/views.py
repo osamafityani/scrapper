@@ -253,7 +253,7 @@ def make_request(url):
     except Exception as e:
         return f"Error while requesting {url}: {e}\n"
 
-
+import os
 def create_products(url):
     headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'
@@ -309,8 +309,7 @@ def thread_items(request):
         print(len(lines))
     file.close()
 
-    if len(lines) == 0:
-        print('########## - getting items')
+    if os.path.getsize('items.txt') == 0:
         categories_urls()
         items_pages()
     else:
@@ -323,7 +322,7 @@ def thread_items(request):
     with ThreadPoolExecutor(max_workers=10) as executor:
         res = [executor.submit(create_products, url) for url in urls]
         concurrent.futures.wait(res)
-    print('########## - Item Done')
+    print('########## - Items Done')
     return Response()
 
 def read_sitemap_urls(sitemap_url):
