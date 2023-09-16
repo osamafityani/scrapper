@@ -161,46 +161,70 @@ def item_data(request):
         link = file.readline().strip()
         lines = file.readlines()
         print(len(lines))
+    file.close()
 
-    with open('items.txt', 'w') as file:
-        for line in lines:
-            file.write(line)
-
-    if len(lines) == 0:
+    if len(lines) == 0 or link == '':
         categories_urls()
         items_pages()
-
-
-    response = requests.get(link, headers=headers)
-
-    data = response.text
-    soup = BeautifulSoup(data, 'html.parser')
-
-    price = soup.find('span', class_='Text-ds Text-ds--title-6 Text-ds--left Text-ds--black').text
-
-    if price.count('$') == 1:
-        price = Decimal(price[1:])
     else:
-        price = 0
-
+        with open('items.txt', 'w') as file:
+            for line in lines:
+                file.write(line)
+        file.close()
     try:
+        response = requests.get(link, headers=headers)
+
+        data = response.text
+        soup = BeautifulSoup(data, 'html.parser')
+
+        price = soup.find('span', class_='Text-ds Text-ds--title-6 Text-ds--left Text-ds--black').text
+
+        if price.count('$') == 1:
+            price = Decimal(price[1:])
+        else:
+            price = 0
+
         product, created = Product.objects.get_or_create(link=link)
-    except:
-        print('+++++++++++++++++++++++++++++++++')
 
-    if created:
-        product.current_price = price
+        if created:
+            product.current_price = price
 
-    else:
-        product.last_price = product.current_price
-        product.current_price = price
+        else:
+            product.last_price = product.current_price
+            product.current_price = price
 
-    try:
         product.save()
+
     except:
-        print('************************************')
+        with open('errors.txt', 'a') as file:
+            file.write(link)
+        file.close()
 
     return Response()
+
+
+@api_view(['GET'])
+def get_items_file(request):
+    with open('items.txt', 'r') as file:
+        response = HttpResponse(file, content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename=items.txt'
+        return response
+
+
+@api_view(['GET'])
+def get_errors_file(request):
+    with open('errors.txt', 'r') as file:
+        response = HttpResponse(file, content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename=errors.txt'
+        return response
+
+
+@api_view(['GET'])
+def get_groups_file(request):
+    with open('groups_urls.txt', 'r') as file:
+        response = HttpResponse(file, content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename=groups_urls.txt'
+        return response
 
 
 def make_request(url):
