@@ -177,7 +177,11 @@ def item_data(request):
         data = response.text
         soup = BeautifulSoup(data, 'html.parser')
 
-        price = soup.find('span', class_='Text-ds Text-ds--title-6 Text-ds--left Text-ds--black').text
+        try:
+            price = soup.find('span', class_='Text-ds Text-ds--title-6 Text-ds--left Text-ds--black').text 
+        except Exception as e:
+            price = soup.find('span', class_='Text-ds Text-ds--title-6 Text-ds--left Text-ds--magenta-500').text 
+
 
         if price.count('$') == 1:
             price = Decimal(price[1:])
