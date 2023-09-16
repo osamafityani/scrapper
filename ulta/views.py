@@ -259,24 +259,23 @@ def create_products(url):
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'
         }
     try:
-        print('**********************')
-        session = requests.Session()
-        response = session.get(url,headers=headers)
+        response = requests.get(url,headers=headers)
+
         data = response.text
         soup = BeautifulSoup(data, 'html.parser')
 
-        price = soup.find('span', class_='Text-ds Text-ds--title-6 Text-ds--left Text-ds--black').text
+        try:
+            price = soup.find('span', class_='Text-ds Text-ds--title-6 Text-ds--left Text-ds--black').text 
+        except Exception as e:
+            price = soup.find('span', class_='Text-ds Text-ds--title-6 Text-ds--left Text-ds--magenta-500').text 
+
 
         if price.count('$') == 1:
             price = Decimal(price[1:])
         else:
             price = 0
 
-        try:
-            product, created = Product.objects.get_or_create(link=url)
-            print('----------------------')
-        except:
-            print('+++++++++++++++++++++++++++++++++')
+        product, created = Product.objects.get_or_create(link=url)
 
         if created:
             product.current_price = price
@@ -285,16 +284,41 @@ def create_products(url):
             product.last_price = product.current_price
             product.current_price = price
 
-        try:
-            product.save()
-            print('----------------------')
-        except:
-            print('**********************************')
-        
-        session.close()
-        return f"Response from {url}: {response.status_code}\n"
-    except Exception as e:
-        return f"Error while requesting {url}: {e}\n"
+        product.save()
+
+    except:
+        with open('errors.txt', 'a') as file:
+            file.write(url + '\n')
+        file.close()
+
+@api_view(['GET'])
+def thread_items(request):
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'
+    }
+
+    with open('items.txt', 'r') as file:
+        urls = []
+        for i in range(10):
+            urls.append(file.readline().strip())
+        lines = file.readlines()
+        print(len(lines))
+    file.close()
+
+    if len(lines) == 0 or urls == []:
+        categories_urls()
+        items_pages()
+    else:
+        with open('items.txt', 'w') as file:
+            for line in lines:
+                file.write(line)
+        file.close()
+    
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        res = [executor.submit(create_products, url) for url in urls]
+        concurrent.futures.wait(res)
+
+    return Response()
 
 def read_sitemap_urls(sitemap_url):
     headers = {
@@ -331,3 +355,5 @@ def threaded_requests(request):
             concurrent.futures.wait(res)
 
     return HttpResponse()
+
+
