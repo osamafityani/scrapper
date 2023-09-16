@@ -126,7 +126,6 @@ def categories_urls():
     return
 
 
-
 def items_pages():
     with open('items.txt', 'w') as file:
         file.truncate(0)
