@@ -299,13 +299,18 @@ def thread_items(request):
 
     with open('items.txt', 'r') as file:
         urls = []
-        for i in range(10):
+        lines = file.readlines()
+        if len(lines) < 10:
+            r = len(lines)
+        else: r = 10
+        
+        for i in range(r):
             urls.append(file.readline().strip())
         lines = file.readlines()
         print(len(lines))
     file.close()
 
-    if len(lines) == 0 or urls == []:
+    if len(lines) == 0:
         categories_urls()
         items_pages()
     else:
