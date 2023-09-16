@@ -260,6 +260,7 @@ def create_products(url):
         }
     try:
         print("########## requesting item info")
+        print(url)
         response = requests.get(url,headers=headers)
 
         data = response.text
