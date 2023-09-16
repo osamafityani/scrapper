@@ -1,3 +1,5 @@
+from concurrent.futures import ThreadPoolExecutor
+import concurrent.futures
 import time
 from decimal import Decimal
 
@@ -100,8 +102,7 @@ def scrap_ulta(request):
     return Response(False)
 
 
-@api_view(['GET'])
-def categories_urls(request):
+def categories_urls():
     with open('groups_urls.txt', 'w') as file:
         file.truncate(0)
 
@@ -122,11 +123,11 @@ def categories_urls(request):
     # url = f'{domain}/scrap_ulta/items_pages/'
     # requests.post(url, data={'page_url': loc.text})
 
-    return Response()
+    return
 
 
-@api_view(['GET'])
-def items_pages(request):
+
+def items_pages():
     with open('items.txt', 'w') as file:
         file.truncate(0)
 
@@ -148,7 +149,7 @@ def items_pages(request):
                         file.write(loc.text + '\n')
             file.close()
 
-    return Response()
+    return
 
 
 @api_view(['GET'])
@@ -165,6 +166,11 @@ def item_data(request):
     with open('items.txt', 'w') as file:
         for line in lines:
             file.write(line)
+
+    if len(lines) == 0:
+        categories_urls()
+        items_pages()
+
 
     response = requests.get(link, headers=headers)
 
@@ -196,3 +202,105 @@ def item_data(request):
         print('************************************')
 
     return Response()
+
+
+def make_request(url):
+    
+    try:
+        print("#########################################")
+        session = requests.Session()
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'
+        }
+        response = session.get(url,headers=headers)
+        data = response.text
+        soup = BeautifulSoup(data, 'xml')
+        with open('threaded_items.txt', 'a') as file:
+            for loc in soup.find_all('loc'):
+                if not loc.text.startswith('https://media'):
+                    file.write(loc.text + '\n')
+            file.close()
+        print("&&&&&&&&&&&&&&&&&&&&&&&&")
+        session.close()
+        return f"Response from {url}: {response.status_code}\n"
+    except Exception as e:
+        return f"Error while requesting {url}: {e}\n"
+
+
+def create_products(url):
+    headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'
+        }
+    try:
+        print('**********************')
+        session = requests.Session()
+        response = session.get(url,headers=headers)
+        data = response.text
+        soup = BeautifulSoup(data, 'html.parser')
+
+        price = soup.find('span', class_='Text-ds Text-ds--title-6 Text-ds--left Text-ds--black').text
+
+        if price.count('$') == 1:
+            price = Decimal(price[1:])
+        else:
+            price = 0
+
+        try:
+            product, created = Product.objects.get_or_create(link=url)
+            print('----------------------')
+        except:
+            print('+++++++++++++++++++++++++++++++++')
+
+        if created:
+            product.current_price = price
+
+        else:
+            product.last_price = product.current_price
+            product.current_price = price
+
+        try:
+            product.save()
+            print('----------------------')
+        except:
+            print('**********************************')
+        
+        session.close()
+        return f"Response from {url}: {response.status_code}\n"
+    except Exception as e:
+        return f"Error while requesting {url}: {e}\n"
+
+def read_sitemap_urls(sitemap_url):
+    headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'
+        }
+    print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
+    response = requests.get(sitemap_url,headers=headers)
+    soup = BeautifulSoup(response.content, 'xml')
+    return [loc.text for loc in soup.find_all('loc')]
+
+
+def read_urls_chunk(file, chunk_size=10):
+    urls = []
+    for _ in range(chunk_size):
+        link = file.readline().strip()
+        urls.append(link)
+    
+    lines = file.readlines()
+    print(len(lines))
+    with open('items.txt', 'w') as file:
+        for line in lines:
+            file.write(line)
+        
+    return urls
+
+
+def threaded_requests(request):
+
+    with open('items.txt', 'r') as file:
+        print('!!!!!!!!!!!!!!!!!!!!!!!!!')
+        urls_chunk = read_urls_chunk(file)
+        with ThreadPoolExecutor(max_workers=None) as executor:
+            res = [executor.submit(create_products, url) for url in urls_chunk]
+            concurrent.futures.wait(res)
+
+    return HttpResponse()
