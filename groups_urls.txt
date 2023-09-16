@@ -1,0 +1,9 @@
+https://www.ulta.com/sitemap/p-0.xml
+https://www.ulta.com/sitemap/p-1.xml
+https://www.ulta.com/sitemap/p-2.xml
+https://www.ulta.com/sitemap/p-3.xml
+https://www.ulta.com/sitemap/p-4.xml
+https://www.ulta.com/sitemap/p-5.xml
+https://www.ulta.com/sitemap/p-6.xml
+https://www.ulta.com/sitemap/p-7.xml
+https://www.ulta.com/sitemap/p-8.xml
