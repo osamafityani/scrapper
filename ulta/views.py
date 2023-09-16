@@ -201,7 +201,7 @@ def item_data(request):
 
     except:
         with open('errors.txt', 'a') as file:
-            file.write(link)
+            file.write(link + '\n')
         file.close()
 
     return Response()
